@@ -7,6 +7,9 @@ import (
 )
 
 func main() {
+
+	ConfigDB()
+
 	r := gin.Default()
 
 	r.GET("/status", func(c *gin.Context) {
