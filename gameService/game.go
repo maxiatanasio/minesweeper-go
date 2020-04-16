@@ -84,14 +84,16 @@ func Click(uuid string, x int, y int) (*game, error) {
 		return nil, err
 	}
 
-	game.Board[x][y].Status = open
-	if game.Board[x][y].Mine == mine {
-		game.Status = lost
-		return game, nil
-	}
+	if game.Board[x][y].Status == nothing {
+		game.Board[x][y].Status = open
+		if game.Board[x][y].Mine == mine {
+			game.Status = lost
+			return game, nil
+		}
 
-	if game.Board[x][y].adyacents == 0 {
-		return clickCellEvent(game, x, y)
+		if game.Board[x][y].adyacents == 0 {
+			return clickCellEvent(game, x, y)
+		}
 	}
 
 	return game, nil
@@ -130,6 +132,20 @@ func Draw(uuid string) (*string, error) {
 	response = response + "\n\rFlagged Mines:" + strconv.Itoa(game.Mines.Flagged)
 
 	return &response, nil
+}
+
+func Flag(uuid string, x int, y int) (*game, error) {
+	game, err := searchGame(uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	if game.Board[x][y].Status == nothing {
+		game.Board[x][y].Status = flagged
+		game.Mines.Flagged++
+	}
+
+	return game, nil
 }
 
 func clickCellEvent(game *game, x int, y int) (*game, error) {

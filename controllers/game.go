@@ -99,3 +99,36 @@ func GameDraw(c *gin.Context) {
 	c.String(http.StatusOK, *response)
 
 }
+
+func GameFlag(c *gin.Context) {
+	x, err := strconv.Atoi(c.Param("x"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid Parameters sent",
+		})
+		return
+	}
+
+	y, err := strconv.Atoi(c.Param("y"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid Parameters sent",
+		})
+		return
+	}
+
+	uuid := c.Param("uuid")
+
+	game, err := gameService.Flag(uuid, x, y)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"game": game,
+	})
+
+}
