@@ -1,0 +1,4 @@
+GET http://localhost:4657/status
+Accept: application/json
+
+###
