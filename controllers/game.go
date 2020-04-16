@@ -14,6 +14,7 @@ func CreateGame(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid Parameters sent",
 		})
+		return
 	}
 
 	y, err := strconv.Atoi(c.Param("y"))
@@ -21,6 +22,7 @@ func CreateGame(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid Parameters sent",
 		})
+		return
 	}
 
 	uuid := game.Start(game.Options{
@@ -31,4 +33,21 @@ func CreateGame(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"uuid": uuid.String(),
 	})
+}
+
+func GameStatus(c *gin.Context) {
+	uuid := c.Param("uuid")
+
+	gameStatus, err := game.Status(uuid)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"game": gameStatus,
+	})
+
 }

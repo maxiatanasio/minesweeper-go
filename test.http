@@ -1,3 +1,11 @@
+GET http://localhost:4657/game/status/fbb556aa-1275-4751-a6fd-3b21837b79cd
+Accept: application/json
+
+###
+GET http://localhost:4657/game/start/6/6
+Accept: application/json
+
+###
 GET http://localhost:4657/status
 Accept: application/json
 

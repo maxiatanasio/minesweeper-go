@@ -16,6 +16,7 @@ func main() {
 	})
 
 	r.GET("/game/start/:x/:y", controllers.CreateGame)
+	r.GET("/game/status/:uuid", controllers.GameStatus)
 
 	r.Run("localhost:4657")
 }
