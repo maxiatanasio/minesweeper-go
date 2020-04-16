@@ -28,8 +28,9 @@ const (
 )
 
 type mineStats struct {
-	Total   int `json:"total"`
-	Flagged int `json:"flagged"`
+	Total      int `json:"total"`
+	Flagged    int `json:"flagged"`
+	Discovered int `json:"discovered"`
 }
 
 type cell struct {
@@ -84,8 +85,13 @@ func Click(uuid string, x int, y int) (*game, error) {
 		return nil, err
 	}
 
+	if game.Status != inProgress {
+		return game, nil
+	}
+
 	if game.Board[x][y].Status == nothing {
 		game.Board[x][y].Status = open
+		game.Mines.Discovered++
 		if game.Board[x][y].Mine == mine {
 			game.Status = lost
 			return game, nil
@@ -93,6 +99,10 @@ func Click(uuid string, x int, y int) (*game, error) {
 
 		if game.Board[x][y].adyacents == 0 {
 			return clickCellEvent(game, x, y)
+		}
+
+		if game.Mines.Discovered == getGameCellCount(game)-game.Mines.Total {
+			game.Status = won
 		}
 	}
 
@@ -140,6 +150,10 @@ func Flag(uuid string, x int, y int) (*game, error) {
 		return nil, err
 	}
 
+	if game.Status != inProgress {
+		return game, nil
+	}
+
 	if game.Board[x][y].Status == nothing {
 		game.Board[x][y].Status = flagged
 		game.Mines.Flagged++
@@ -161,8 +175,9 @@ func clickCellEvent(game *game, x int, y int) (*game, error) {
 }
 
 func clickWaveEffect(game *game, cell *cell) {
-	if cell.Mine == empty {
+	if cell.Mine == empty && cell.Status == nothing {
 		cell.Status = open
+		game.Mines.Discovered++
 		if cell.adyacents == 0 {
 			clickCellEvent(game, cell.x, cell.y)
 		}
@@ -235,16 +250,17 @@ func searchGame(uuid string) (*game, error) {
 func createBoard(x int, y int) (board, mineStats) {
 	newBoard := board{}
 	mines := mineStats{
-		Total:   0,
-		Flagged: 0,
+		Total:      0,
+		Flagged:    0,
+		Discovered: 0,
 	}
 	for i := 0; i < y; i++ {
 		newBoard = append(newBoard, []cell{})
 		for j := 0; j < x; j++ {
 
 			mineValue := empty
-			randomMineValueBase := helpers.RandomInt(1, 6)
-			if randomMineValueBase > 5 {
+			randomMineValueBase := helpers.RandomInt(1, 10)
+			if randomMineValueBase > 8 {
 				mineValue = mine
 				mines.Total++
 			}
@@ -278,4 +294,8 @@ func evaluateAdyacents(board *board, x int, y int) int {
 
 	return adyacentMinesCounter
 
+}
+
+func getGameCellCount(game *game) int {
+	return len(game.Board) * len(game.Board[0])
 }
