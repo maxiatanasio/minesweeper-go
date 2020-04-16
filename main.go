@@ -17,6 +17,8 @@ func main() {
 
 	r.GET("/game/start/:x/:y", controllers.CreateGame)
 	r.GET("/game/status/:uuid", controllers.GameStatus)
+	r.GET("/game/click/:uuid/:x/:y", controllers.GameClick)
+	r.GET("/game/draw/:uuid", controllers.GameDraw)
 
 	r.Run("localhost:4657")
 }

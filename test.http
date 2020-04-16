@@ -1,8 +1,16 @@
-GET http://localhost:4657/game/status/fbb556aa-1275-4751-a6fd-3b21837b79cd
+GET http://localhost:4657/game/draw/c6a39b74-b2f6-4bed-a4a1-9cd1cd483eef
+Accept: application/text
+
+###
+GET http://localhost:4657/game/click/c6a39b74-b2f6-4bed-a4a1-9cd1cd483eef/10/5
 Accept: application/json
 
 ###
-GET http://localhost:4657/game/start/6/6
+GET http://localhost:4657/game/status/c6a39b74-b2f6-4bed-a4a1-9cd1cd483eef
+Accept: application/json
+
+###
+GET http://localhost:4657/game/start/12/12
 Accept: application/json
 
 ###
