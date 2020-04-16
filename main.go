@@ -19,10 +19,10 @@ func main() {
 	})
 
 	r.GET("/game/start/:x/:y", controllers.CreateGame(db))
-	r.GET("/game/status/:uuid", controllers.GameStatus)
-	r.GET("/game/click/:uuid/:x/:y", controllers.GameClick)
-	r.GET("/game/draw/:uuid", controllers.GameDraw)
-	r.GET("/game/flag/:uuid/:x/:y", controllers.GameFlag)
+	r.GET("/game/status/:uuid", controllers.GameStatus(db))
+	r.GET("/game/click/:uuid/:x/:y", controllers.GameClick(db))
+	r.GET("/game/draw/:uuid", controllers.GameDraw(db))
+	r.GET("/game/flag/:uuid/:x/:y", controllers.GameFlag(db))
 
 	r.Run("localhost:4657")
 

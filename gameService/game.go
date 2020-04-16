@@ -30,39 +30,11 @@ const (
 	lost
 )
 
-type mineStats struct {
-	Total      int `json:"total"`
-	Flagged    int `json:"flagged"`
-	Discovered int `json:"discovered"`
-}
-
-type cell struct {
-	Mine      int `json:"mine"`
-	Status    int `json:"status"`
-	adyacents int
-	x         int
-	y         int
-}
-
-type board = [][]cell
-
-type game struct {
-	uuid   *goid.UUID
-	Board  board     `json:"board"`
-	Status int       `json:"status"`
-	Mines  mineStats `json:"mines"`
-}
-
-type Options struct {
-	SizeX int
-	SizeY int
-}
-
-var games []game
+var games []Game
 
 func Start(options Options, db *gorm.DB) *goid.UUID {
 	board, mines := createBoard(options.SizeX, options.SizeY)
-	newGame := game{
+	newGame := Game{
 		uuid:   goid.NewV4UUID(),
 		Board:  board,
 		Status: inProgress,
@@ -70,10 +42,13 @@ func Start(options Options, db *gorm.DB) *goid.UUID {
 	}
 
 	jsonBoard, _ := json.Marshal(board)
+	jsonMines, _ := json.Marshal(mines)
 
 	db.Create(&models.Game{
-		Uuid:  newGame.uuid.String(),
-		Board: jsonBoard,
+		Uuid:   newGame.uuid.String(),
+		Board:  jsonBoard,
+		Status: newGame.Status,
+		Mines:  jsonMines,
 	})
 
 	games = append(games, newGame)
@@ -81,16 +56,16 @@ func Start(options Options, db *gorm.DB) *goid.UUID {
 	return newGame.uuid
 }
 
-func Status(uuid string) (*game, error) {
-	game, err := searchGame(uuid)
+func Status(uuid string, db *gorm.DB) (*Game, error) {
+	game, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
 	return game, nil
 }
 
-func Click(uuid string, x int, y int) (*game, error) {
-	game, err := searchGame(uuid)
+func Click(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
+	game, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +95,8 @@ func Click(uuid string, x int, y int) (*game, error) {
 
 }
 
-func Draw(uuid string) (*string, error) {
-	game, err := searchGame(uuid)
+func Draw(uuid string, db *gorm.DB) (*string, error) {
+	game, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
@@ -154,8 +129,8 @@ func Draw(uuid string) (*string, error) {
 	return &response, nil
 }
 
-func Flag(uuid string, x int, y int) (*game, error) {
-	game, err := searchGame(uuid)
+func Flag(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
+	game, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +147,7 @@ func Flag(uuid string, x int, y int) (*game, error) {
 	return game, nil
 }
 
-func clickCellEvent(game *game, x int, y int) (*game, error) {
+func clickCellEvent(game *Game, x int, y int) (*Game, error) {
 
 	adyacentCells := getAdyacentCells(&game.Board, x, y)
 
@@ -184,7 +159,7 @@ func clickCellEvent(game *game, x int, y int) (*game, error) {
 
 }
 
-func clickWaveEffect(game *game, cell *cell) {
+func clickWaveEffect(game *Game, cell *Cell) {
 	if cell.Mine == empty && cell.Status == nothing {
 		cell.Status = open
 		game.Mines.Discovered++
@@ -194,8 +169,8 @@ func clickWaveEffect(game *game, cell *cell) {
 	}
 }
 
-func getAdyacentCells(board *board, x int, y int) []*cell {
-	adyacentCells := []*cell{}
+func getAdyacentCells(board *Board, x int, y int) []*Cell {
+	adyacentCells := []*Cell{}
 
 	if y > 0 {
 		if (*board)[x][y-1].Status == nothing {
@@ -248,7 +223,7 @@ func getAdyacentCells(board *board, x int, y int) []*cell {
 	return adyacentCells
 }
 
-func searchGame(uuid string) (*game, error) {
+func searchGame(uuid string) (*Game, error) {
 	for i := 0; i < len(games); i++ {
 		if games[i].uuid.String() == uuid {
 			return &games[i], nil
@@ -257,15 +232,15 @@ func searchGame(uuid string) (*game, error) {
 	return nil, errors.New("No game found")
 }
 
-func createBoard(x int, y int) (board, mineStats) {
-	newBoard := board{}
-	mines := mineStats{
+func createBoard(x int, y int) (Board, MineStats) {
+	newBoard := Board{}
+	mines := MineStats{
 		Total:      0,
 		Flagged:    0,
 		Discovered: 0,
 	}
 	for i := 0; i < y; i++ {
-		newBoard = append(newBoard, []cell{})
+		newBoard = append(newBoard, []Cell{})
 		for j := 0; j < x; j++ {
 
 			mineValue := empty
@@ -275,7 +250,7 @@ func createBoard(x int, y int) (board, mineStats) {
 				mines.Total++
 			}
 
-			newBoard[i] = append(newBoard[i], cell{
+			newBoard[i] = append(newBoard[i], Cell{
 				Mine:   mineValue,
 				Status: nothing,
 				x:      i,
@@ -292,7 +267,7 @@ func createBoard(x int, y int) (board, mineStats) {
 	return newBoard, mines
 }
 
-func evaluateAdyacents(board *board, x int, y int) int {
+func evaluateAdyacents(board *Board, x int, y int) int {
 	adyacentCells := getAdyacentCells(board, x, y)
 
 	adyacentMinesCounter := 0
@@ -306,6 +281,6 @@ func evaluateAdyacents(board *board, x int, y int) int {
 
 }
 
-func getGameCellCount(game *game) int {
+func getGameCellCount(game *Game) int {
 	return len(game.Board) * len(game.Board[0])
 }
