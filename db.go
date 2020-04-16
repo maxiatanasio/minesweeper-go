@@ -13,7 +13,5 @@ func ConfigDB() *gorm.DB {
 		os.Exit(1)
 	}
 
-	defer db.Close()
-
 	return db
 }

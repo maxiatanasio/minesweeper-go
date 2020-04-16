@@ -1,9 +1,12 @@
 package gameService
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/JakeHL/Goid"
+	"github.com/jinzhu/gorm"
 	"minesweeper-API/helpers"
+	"minesweeper-API/models"
 	"strconv"
 )
 
@@ -57,7 +60,7 @@ type Options struct {
 
 var games []game
 
-func Start(options Options) *goid.UUID {
+func Start(options Options, db *gorm.DB) *goid.UUID {
 	board, mines := createBoard(options.SizeX, options.SizeY)
 	newGame := game{
 		uuid:   goid.NewV4UUID(),
@@ -65,6 +68,13 @@ func Start(options Options) *goid.UUID {
 		Status: inProgress,
 		Mines:  mines,
 	}
+
+	jsonBoard, _ := json.Marshal(board)
+
+	db.Create(&models.Game{
+		Uuid:  newGame.uuid.String(),
+		Board: jsonBoard,
+	})
 
 	games = append(games, newGame)
 

@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	ConfigDB()
+	db := ConfigDB()
 
 	r := gin.Default()
 
@@ -18,11 +18,13 @@ func main() {
 		})
 	})
 
-	r.GET("/game/start/:x/:y", controllers.CreateGame)
+	r.GET("/game/start/:x/:y", controllers.CreateGame(db))
 	r.GET("/game/status/:uuid", controllers.GameStatus)
 	r.GET("/game/click/:uuid/:x/:y", controllers.GameClick)
 	r.GET("/game/draw/:uuid", controllers.GameDraw)
 	r.GET("/game/flag/:uuid/:x/:y", controllers.GameFlag)
 
 	r.Run("localhost:4657")
+
+	defer db.Close()
 }

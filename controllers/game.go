@@ -2,37 +2,41 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"minesweeper-API/gameService"
 	"net/http"
 	"strconv"
 )
 
-func CreateGame(c *gin.Context) {
+func CreateGame(db *gorm.DB) func(ctx *gin.Context) {
 
-	x, err := strconv.Atoi(c.Param("x"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid Parameters sent",
+	return func(c *gin.Context) {
+		x, err := strconv.Atoi(c.Param("x"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Invalid Parameters sent",
+			})
+			return
+		}
+
+		y, err := strconv.Atoi(c.Param("y"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Invalid Parameters sent",
+			})
+			return
+		}
+
+		uuid := gameService.Start(gameService.Options{
+			SizeX: x,
+			SizeY: y,
+		}, db)
+
+		c.JSON(http.StatusOK, gin.H{
+			"uuid": uuid.String(),
 		})
-		return
 	}
 
-	y, err := strconv.Atoi(c.Param("y"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid Parameters sent",
-		})
-		return
-	}
-
-	uuid := gameService.Start(gameService.Options{
-		SizeX: x,
-		SizeY: y,
-	})
-
-	c.JSON(http.StatusOK, gin.H{
-		"uuid": uuid.String(),
-	})
 }
 
 func GameStatus(c *gin.Context) {
