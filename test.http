@@ -6,7 +6,7 @@ GET http://localhost:4657/game/click/c6a39b74-b2f6-4bed-a4a1-9cd1cd483eef/10/5
 Accept: application/json
 
 ###
-GET http://localhost:4657/game/status/c6a39b74-b2f6-4bed-a4a1-9cd1cd483eef
+GET http://localhost:4657/game/status/3125bee1-30da-44ed-9759-0a0c34b09d9f
 Accept: application/json
 
 ###

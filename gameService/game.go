@@ -27,6 +27,11 @@ const (
 	lost
 )
 
+type mineStats struct {
+	Total   int `json:"total"`
+	Flagged int `json:"flagged"`
+}
+
 type cell struct {
 	Mine      int `json:"mine"`
 	Status    int `json:"status"`
@@ -39,8 +44,9 @@ type board = [][]cell
 
 type game struct {
 	uuid   *goid.UUID
-	Board  board `json:"board"`
-	Status int   `json:"status"`
+	Board  board     `json:"board"`
+	Status int       `json:"status"`
+	Mines  mineStats `json:"mines"`
 }
 
 type Options struct {
@@ -51,10 +57,12 @@ type Options struct {
 var games []game
 
 func Start(options Options) *goid.UUID {
+	board, mines := createBoard(options.SizeX, options.SizeY)
 	newGame := game{
 		uuid:   goid.NewV4UUID(),
-		Board:  createBoard(options.SizeX, options.SizeY),
+		Board:  board,
 		Status: inProgress,
+		Mines:  mines,
 	}
 
 	games = append(games, newGame)
@@ -117,7 +125,9 @@ func Draw(uuid string) (*string, error) {
 		response = response + "\n\r"
 	}
 
-	response = response + "\n\r" + strconv.Itoa(game.Status)
+	response = response + "\n\rStatus:" + strconv.Itoa(game.Status)
+	response = response + "\n\rTotal Mines:" + strconv.Itoa(game.Mines.Total)
+	response = response + "\n\rFlagged Mines:" + strconv.Itoa(game.Mines.Flagged)
 
 	return &response, nil
 }
@@ -206,8 +216,12 @@ func searchGame(uuid string) (*game, error) {
 	return nil, errors.New("No game found")
 }
 
-func createBoard(x int, y int) board {
+func createBoard(x int, y int) (board, mineStats) {
 	newBoard := board{}
+	mines := mineStats{
+		Total:   0,
+		Flagged: 0,
+	}
 	for i := 0; i < y; i++ {
 		newBoard = append(newBoard, []cell{})
 		for j := 0; j < x; j++ {
@@ -216,6 +230,7 @@ func createBoard(x int, y int) board {
 			randomMineValueBase := helpers.RandomInt(1, 6)
 			if randomMineValueBase > 5 {
 				mineValue = mine
+				mines.Total++
 			}
 
 			newBoard[i] = append(newBoard[i], cell{
@@ -232,7 +247,7 @@ func createBoard(x int, y int) board {
 			newBoard[i][j].adyacents = evaluateAdyacents(&newBoard, i, j)
 		}
 	}
-	return newBoard
+	return newBoard, mines
 }
 
 func evaluateAdyacents(board *board, x int, y int) int {
