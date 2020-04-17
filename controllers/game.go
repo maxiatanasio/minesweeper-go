@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"minesweeper-API/gameService"
+	"github.com/maxiatanasio/mineswepper-API/gameService"
 	"net/http"
 	"strconv"
 )

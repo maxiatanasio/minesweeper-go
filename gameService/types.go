@@ -1,7 +1,7 @@
 package gameService
 
 import (
-	goid "github.com/JakeHL/Goid"
+	"github.com/jakehl/goid"
 	"time"
 )
 

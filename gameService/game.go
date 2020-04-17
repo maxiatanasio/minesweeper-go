@@ -1,9 +1,9 @@
 package gameService
 
 import (
-	"github.com/JakeHL/Goid"
+	"github.com/jakehl/goid"
 	"github.com/jinzhu/gorm"
-	"minesweeper-API/helpers"
+	"github.com/maxiatanasio/mineswepper-API/helpers"
 	"strconv"
 )
 
@@ -215,7 +215,7 @@ func createBoard(x int, y int) (Board, MineStats) {
 
 			mineValue := empty
 			randomMineValueBase := helpers.RandomInt(1, 10)
-			if randomMineValueBase > 8 {
+			if randomMineValueBase > 9 {
 				mineValue = mine
 				mines.Total++
 			}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"minesweeper-API/controllers"
+	"github.com/maxiatanasio/mineswepper-API/controllers"
 	"net/http"
 )
 

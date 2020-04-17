@@ -2,7 +2,7 @@ package gameService
 
 import (
 	"github.com/jinzhu/gorm"
-	"minesweeper-API/models"
+	"github.com/maxiatanasio/mineswepper-API/models"
 )
 
 func CreateGame(game *Game, db *gorm.DB) error {

@@ -2,8 +2,8 @@ package gameService
 
 import (
 	"encoding/json"
-	goid "github.com/JakeHL/Goid"
-	"minesweeper-API/models"
+	"github.com/jakehl/goid"
+	"github.com/maxiatanasio/mineswepper-API/models"
 	"time"
 )
 

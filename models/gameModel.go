@@ -1,7 +1,7 @@
 package models
 
 import (
-	"minesweeper-API/helpers"
+	"github.com/maxiatanasio/mineswepper-API/helpers"
 	"time"
 )
 
