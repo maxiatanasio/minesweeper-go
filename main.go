@@ -5,6 +5,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/maxiatanasio/mineswepper-API/controllers"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -25,7 +26,9 @@ func main() {
 	r.GET("/game/draw/:uuid", controllers.GameDraw(db))
 	r.GET("/game/flag/:uuid/:x/:y", controllers.GameFlag(db))
 
-	r.Run("localhost:4657")
+	port := os.Getenv("PORT")
+
+	r.Run(":" + port)
 
 	defer db.Close()
 }
