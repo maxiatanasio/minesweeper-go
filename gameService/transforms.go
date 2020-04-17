@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	goid "github.com/JakeHL/Goid"
 	"minesweeper-API/models"
+	"time"
 )
 
 func gameFromDBModel(gameModel *models.Game) (*Game, *uint) {
@@ -16,10 +17,12 @@ func gameFromDBModel(gameModel *models.Game) (*Game, *uint) {
 	json.Unmarshal(gameModel.Mines, &mines)
 
 	gameFounded := Game{
-		uuid:   uuidFromModel,
-		Status: gameModel.Status,
-		Board:  board,
-		Mines:  mines,
+		uuid:       uuidFromModel,
+		Status:     gameModel.Status,
+		Board:      board,
+		Mines:      mines,
+		started:    gameModel.CreatedAt,
+		ElapseTime: uint(time.Now().Sub(gameModel.CreatedAt) / 1000000000),
 	}
 
 	return &gameFounded, &gameModel.ID
@@ -30,10 +33,11 @@ func dbModelFromGame(game *Game, id *uint) *models.Game {
 	jsonMines, _ := json.Marshal(game.Mines)
 
 	gameModel := models.Game{
-		Uuid:   game.uuid.String(),
-		Board:  jsonBoard,
-		Status: game.Status,
-		Mines:  jsonMines,
+		Uuid:      game.uuid.String(),
+		Board:     jsonBoard,
+		Status:    game.Status,
+		Mines:     jsonMines,
+		CreatedAt: game.started,
 	}
 
 	if id != nil {

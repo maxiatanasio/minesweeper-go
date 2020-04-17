@@ -1,6 +1,9 @@
 package gameService
 
-import goid "github.com/JakeHL/Goid"
+import (
+	goid "github.com/JakeHL/Goid"
+	"time"
+)
 
 type MineStats struct {
 	Total      int `json:"total"`
@@ -19,10 +22,12 @@ type Cell struct {
 type Board = [][]Cell
 
 type Game struct {
-	uuid   *goid.UUID
-	Board  `json:"board"`
-	Status int       `json:"status"`
-	Mines  MineStats `json:"mines"`
+	uuid       *goid.UUID
+	Board      `json:"board"`
+	Status     int       `json:"status"`
+	Mines      MineStats `json:"mines"`
+	ElapseTime uint      `json:"elapse_time"`
+	started    time.Time
 }
 
 type Options struct {
