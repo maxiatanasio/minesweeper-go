@@ -1,38 +1,13 @@
 package gameService
 
 import (
-	"encoding/json"
-	"errors"
 	"github.com/JakeHL/Goid"
 	"github.com/jinzhu/gorm"
 	"minesweeper-API/helpers"
-	"minesweeper-API/models"
 	"strconv"
 )
 
-const (
-	_ = iota
-	empty
-	mine
-)
-
-const (
-	_ = iota
-	nothing
-	flagged
-	open
-)
-
-const (
-	_ = iota
-	inProgress
-	won
-	lost
-)
-
-var games []Game
-
-func Start(options Options, db *gorm.DB) *goid.UUID {
+func Start(options Options, db *gorm.DB) (*goid.UUID, error) {
 	board, mines := createBoard(options.SizeX, options.SizeY)
 	newGame := Game{
 		uuid:   goid.NewV4UUID(),
@@ -41,31 +16,24 @@ func Start(options Options, db *gorm.DB) *goid.UUID {
 		Mines:  mines,
 	}
 
-	jsonBoard, _ := json.Marshal(board)
-	jsonMines, _ := json.Marshal(mines)
+	if err := CreateGame(&newGame, db); err != nil {
+		return nil, err
+	}
 
-	db.Create(&models.Game{
-		Uuid:   newGame.uuid.String(),
-		Board:  jsonBoard,
-		Status: newGame.Status,
-		Mines:  jsonMines,
-	})
-
-	games = append(games, newGame)
-
-	return newGame.uuid
+	return newGame.uuid, nil
 }
 
 func Status(uuid string, db *gorm.DB) (*Game, error) {
-	game, err := SearchGame(uuid, db)
+	game, _, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
+
 	return game, nil
 }
 
 func Click(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
-	game, err := SearchGame(uuid, db)
+	game, id, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
@@ -79,16 +47,24 @@ func Click(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
 		game.Mines.Discovered++
 		if game.Board[x][y].Mine == mine {
 			game.Status = lost
+			if err := UpdateGame(game, id, db); err != nil {
+				return nil, err
+			}
 			return game, nil
 		}
 
-		if game.Board[x][y].adyacents == 0 {
-			return clickCellEvent(game, x, y)
+		if game.Board[x][y].Adyacents == 0 {
+			clickCellEvent(game, x, y)
 		}
 
 		if game.Mines.Discovered == getGameCellCount(game)-game.Mines.Total {
 			game.Status = won
 		}
+
+		if err := UpdateGame(game, id, db); err != nil {
+			return nil, err
+		}
+
 	}
 
 	return game, nil
@@ -96,7 +72,7 @@ func Click(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
 }
 
 func Draw(uuid string, db *gorm.DB) (*string, error) {
-	game, err := SearchGame(uuid, db)
+	game, _, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +88,7 @@ func Draw(uuid string, db *gorm.DB) (*string, error) {
 				response = response + "F"
 			} else if cell.Status == open {
 				if cell.Mine == empty {
-					response = response + strconv.Itoa(cell.adyacents)
+					response = response + strconv.Itoa(cell.Adyacents)
 				} else {
 					response = response + "M"
 				}
@@ -130,7 +106,7 @@ func Draw(uuid string, db *gorm.DB) (*string, error) {
 }
 
 func Flag(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
-	game, err := SearchGame(uuid, db)
+	game, id, err := SearchGame(uuid, db)
 	if err != nil {
 		return nil, err
 	}
@@ -142,6 +118,9 @@ func Flag(uuid string, x int, y int, db *gorm.DB) (*Game, error) {
 	if game.Board[x][y].Status == nothing {
 		game.Board[x][y].Status = flagged
 		game.Mines.Flagged++
+		if err := UpdateGame(game, id, db); err != nil {
+			return nil, err
+		}
 	}
 
 	return game, nil
@@ -163,8 +142,8 @@ func clickWaveEffect(game *Game, cell *Cell) {
 	if cell.Mine == empty && cell.Status == nothing {
 		cell.Status = open
 		game.Mines.Discovered++
-		if cell.adyacents == 0 {
-			clickCellEvent(game, cell.x, cell.y)
+		if cell.Adyacents == 0 {
+			clickCellEvent(game, cell.X, cell.Y)
 		}
 	}
 }
@@ -223,15 +202,6 @@ func getAdyacentCells(board *Board, x int, y int) []*Cell {
 	return adyacentCells
 }
 
-func searchGame(uuid string) (*Game, error) {
-	for i := 0; i < len(games); i++ {
-		if games[i].uuid.String() == uuid {
-			return &games[i], nil
-		}
-	}
-	return nil, errors.New("No game found")
-}
-
 func createBoard(x int, y int) (Board, MineStats) {
 	newBoard := Board{}
 	mines := MineStats{
@@ -253,15 +223,15 @@ func createBoard(x int, y int) (Board, MineStats) {
 			newBoard[i] = append(newBoard[i], Cell{
 				Mine:   mineValue,
 				Status: nothing,
-				x:      i,
-				y:      j,
+				X:      i,
+				Y:      j,
 			})
 		}
 	}
 
 	for i := 0; i < y; i++ {
 		for j := 0; j < x; j++ {
-			newBoard[i][j].adyacents = evaluateAdyacents(&newBoard, i, j)
+			newBoard[i][j].Adyacents = evaluateAdyacents(&newBoard, i, j)
 		}
 	}
 	return newBoard, mines

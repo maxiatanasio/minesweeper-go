@@ -1,37 +1,39 @@
 package gameService
 
 import (
-	"encoding/json"
-	goid "github.com/JakeHL/Goid"
 	"github.com/jinzhu/gorm"
 	"minesweeper-API/models"
 )
 
-func SearchGame(uuid string, db *gorm.DB) (*Game, error) {
+func CreateGame(game *Game, db *gorm.DB) error {
 
-	var game models.Game
+	if result := db.Create(dbModelFromGame(game, nil)); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+func SearchGame(uuid string, db *gorm.DB) (*Game, *uint, error) {
+
+	var gameModel models.Game
 
 	if result := db.Where(&models.Game{
 		Uuid: uuid,
-	}).First(&game); result.Error != nil {
-		return nil, result.Error
+	}).First(&gameModel); result.Error != nil {
+		return nil, nil, result.Error
 	}
 
-	uuidFromModel, _ := goid.GetUUIDFromString(game.Uuid)
+	game, id := gameFromDBModel(&gameModel)
 
-	var board Board
-	var mines MineStats
+	return game, id, nil
 
-	json.Unmarshal(game.Board, &board)
-	json.Unmarshal(game.Mines, &mines)
+}
 
-	gameFounded := Game{
-		uuid:   uuidFromModel,
-		Status: game.Status,
-		Board:  board,
-		Mines:  mines,
+func UpdateGame(game *Game, id *uint, db *gorm.DB) error {
+	gameModel := dbModelFromGame(game, id)
+	if result := db.Save(gameModel); result.Error != nil {
+		return result.Error
 	}
-
-	return &gameFounded, nil
-
+	return nil
 }

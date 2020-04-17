@@ -11,9 +11,9 @@ type MineStats struct {
 type Cell struct {
 	Mine      int `json:"mine"`
 	Status    int `json:"status"`
-	adyacents int
-	x         int
-	y         int
+	Adyacents int `json:"adyacents"`
+	X         int `json:"x"`
+	Y         int `json:"y"`
 }
 
 type Board = [][]Cell

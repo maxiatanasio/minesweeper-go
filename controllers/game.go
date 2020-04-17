@@ -27,10 +27,16 @@ func CreateGame(db *gorm.DB) func(ctx *gin.Context) {
 			return
 		}
 
-		uuid := gameService.Start(gameService.Options{
+		uuid, err := gameService.Start(gameService.Options{
 			SizeX: x,
 			SizeY: y,
 		}, db)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": err.Error(),
+			})
+		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"uuid": uuid.String(),
