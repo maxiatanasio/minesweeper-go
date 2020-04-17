@@ -5,15 +5,17 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/maxiatanasio/mineswepper-API/helpers"
 	"strconv"
+	"time"
 )
 
 func Start(options Options, db *gorm.DB) (*goid.UUID, error) {
 	board, mines := createBoard(options.SizeX, options.SizeY)
 	newGame := Game{
-		uuid:   goid.NewV4UUID(),
-		Board:  board,
-		Status: inProgress,
-		Mines:  mines,
+		uuid:    goid.NewV4UUID(),
+		Board:   board,
+		Status:  inProgress,
+		Mines:   mines,
+		started: time.Now(),
 	}
 
 	if err := CreateGame(&newGame, db); err != nil {
